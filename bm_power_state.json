@@ -1,0 +1,29 @@
+{
+  "magnet_set_title": "ID (A:M1, B:M1)",
+  "settings": {
+    "energy_GeV": 6.0,
+    "current_A": 0.22,
+    "screen_z_mm": 31020.0,
+    "nx": 1024,
+    "ny": 1024,
+    "Emin_eV": 100.0,
+    "Emax_eV": 50000.0,
+    "nE": 1000,
+    "logE": true
+  },
+  "masks": [
+    {
+      "name": "Mask1",
+      "z_mm": 7000.0,
+      "apertures": [
+        {
+          "width_mm": 1.0,
+          "height_mm": 5.0,
+          "center_x_mm": 0.0,
+          "center_y_mm": 0.0
+        }
+      ]
+    }
+  ],
+  "attenuators": []
+}
