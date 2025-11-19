@@ -287,8 +287,10 @@ class BeamlineUI:
                     except Exception:
                         return str(v)
                 rows_html = []
-                rows_html.append("<tr><th>Label</th><th>Width X [mm]</th><th>Height Y [mm]</th><th>Width θ [mrad]</th><th>Height ψ [mrad]</th><th>Total Power [W]</th><th>Centroid X [mm]</th><th>Centroid Y [mm]</th></tr>")
+                rows_html.append("<tr><th>Footprint</th><th>Size X [mm]</th><th>Size Y [mm]</th><th>Width θ [mrad]</th><th>Height ψ [mrad]</th><th>Total Power [W]</th></tr>")
+                total_fp_power = 0.0
                 for fp in fps:
+                    total_fp_power += float(fp.total_power_W)
                     rows_html.append(
                         f"<tr>"
                         f"<td>{fp.label}</td>"
@@ -297,10 +299,12 @@ class BeamlineUI:
                         f"<td>{_fmt(fp.width_theta_mrad)}</td>"
                         f"<td>{_fmt(fp.height_psi_mrad)}</td>"
                         f"<td>{fp.total_power_W:.3e}</td>"
-                        f"<td>{_fmt(fp.centroid_x_mm)}</td>"
-                        f"<td>{_fmt(fp.centroid_y_mm)}</td>"
                         f"</tr>"
                     )
+                # Add a bottom sum row
+                rows_html.append(
+                    f"<tr style=\"border-top:1px solid #ccc\"><th colspan=5 style=\"text-align:right\">Sum of footprint powers [W]</th><th>{total_fp_power:.3e}</th></tr>"
+                )
                 table_html = (
                     "<div style=\"margin-top:8px\">"
                     "<h4 style=\"margin:4px 0\">Footprints</h4>"
@@ -526,40 +530,10 @@ class BeamlineUI:
             rows = []
             rows.append(f"<tr><th style='text-align:left;'>Magnet set</th><td>{magnet_title}</td></tr>")
             rows.append(f"<tr><th style='text-align:left;'>Screen Z [mm]</th><td>{_fmtf(s.screen_z_mm, 3)}</td></tr>")
-            rows.append(f"<tr><th style='text-align:left;'>Grid (Nx×Ny)</th><td>{s.nx} × {s.ny}</td></tr>")
-            rows.append(f"<tr><th style='text-align:left;'>Energy range [eV]</th><td>{_fmtf(s.Emin_eV,0)} – {_fmtf(s.Emax_eV,0)} (nE={s.nE}, {'log' if s.logE else 'linear'})</td></tr>")
-            rows.append(f"<tr><th style='text-align:left;'>Sigma [rad]</th><td>{_fmt_sig(sigma_rad, 6)} ({_fmt_sig(sigma_mrad, 6)} mrad)</td></tr>")
+            rows.append(f"<tr><th style='text-align:left;'>Sigma</th><td>{_fmt_sig(sigma_rad, 6)} rad ({_fmt_sig(sigma_mrad, 6)} mrad)</td></tr>")
             rows.append(f"<tr><th style='text-align:left;'>P_peak (5.42·B·E^4·I) [W]</th><td>{ppeak_html}</td></tr>")
-            rows.append(f"<tr><th style='text-align:left;'>Upstream masks</th><td>{n_masks_up}</td></tr>")
-            rows.append(f"<tr><th style='text-align:left;'>Upstream attenuators</th><td>{n_atts_up} (attenuation active: {atten_status})</td></tr>")
-            rows.append(f"<tr><th style='text-align:left;'>Allowed pixels</th><td>{res.allowed_count}</td></tr>")
-            rows.append(f"<tr><th style='text-align:left;'>Allowed area fraction [%]</th><td>{_fmtf(res.allowed_fraction_percent, 2)}</td></tr>")
             rows.append(f"<tr><th style='text-align:left;'>Total power at screen [W]</th><td>{_fmtf(res.total_power_W, 3)}</td></tr>")
-            if hasattr(res, 'angular_total_W') and res.angular_total_W is not None:
-                rows.append(f"<tr><th style='text-align:left;'>Angular-grid total [W]</th><td>{_fmtf(res.angular_total_W, 3)}</td></tr>")
-                if hasattr(res, 'delta_screen_vs_angular_percent') and res.delta_screen_vs_angular_percent is not None:
-                    rows.append(f"<tr><th style='text-align:left;'>Delta (Screen vs Angular) [%]</th><td>{_fmtf(res.delta_screen_vs_angular_percent, 2)}</td></tr>")
-            if hasattr(res, 'validation_total_W') and res.validation_total_W is not None:
-                rows.append(f"<tr><th style='text-align:left;'>Validation total power [W]</th><td>{_fmtf(res.validation_total_W, 3)}</td></tr>")
-                if hasattr(res, 'delta_angular_vs_validation_percent') and res.delta_angular_vs_validation_percent is not None:
-                    rows.append(f"<tr><th style='text-align:left;'>Delta (Angular vs Validation) [%]</th><td>{_fmtf(res.delta_angular_vs_validation_percent, 2)}</td></tr>")
-            rows.append(f"<tr><th style='text-align:left;'>Sum of footprint powers [W]</th><td>{_fmtf(sum_fp_W, 3)}</td></tr>")
-            # Unmasked total (no masks, same attenuators) and masked/unmasked ratio, if available
-            if hasattr(res, 'unmasked_total_W') and res.unmasked_total_W is not None:
-                rows.append(f"<tr><th style='text-align:left;'>Unmasked total power [W]</th><td>{_fmtf(res.unmasked_total_W, 3)}</td></tr>")
-                try:
-                    if float(res.unmasked_total_W) > 0:
-                        ratio = 100.0 * float(res.total_power_W) / float(res.unmasked_total_W)
-                        rows.append(f"<tr><th style='text-align:left;'>Masked/Unmasked [%]</th><td>{_fmtf(ratio, 2)}</td></tr>")
-                except Exception:
-                    pass
-            if hasattr(res, 'validation_total_W') and res.validation_total_W is not None:
-                rows.append(f"<tr><th style='text-align:left;'>Validation total power [W]</th><td>{_fmtf(res.validation_total_W, 3)}</td></tr>")
-                if res.validation_delta_percent is not None:
-                    rows.append(f"<tr><th style='text-align:left;'>Delta vs validation [%]</th><td>{_fmtf(res.validation_delta_percent, 2)}</td></tr>")
-            rows.append(f"<tr><th style='text-align:left;'>θ (horizontal) window [rad]</th><td>{_fmtf(tx_lo, 6)} – {_fmtf(tx_hi, 6)}</td></tr>")
-            rows.append(f"<tr><th style='text-align:left;'>ψ (vertical) window [rad]</th><td>{_fmtf(ty_lo, 6)} – {_fmtf(ty_hi, 6)}</td></tr>")
-            rows.append(f"<tr><th style='text-align:left;'>Detected footprints</th><td>{n_fps}</td></tr>")
+
             summary_html = (
                 "<div style=\"margin-top:10px\">"
                 "<h4 style=\"margin:4px 0\">Run Summary</h4>"
