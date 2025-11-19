@@ -157,7 +157,7 @@ class BeamlineUI:
         self.accordion.set_title(0, "Settings")
         self.accordion.set_title(1, "Masks")
         self.accordion.set_title(2, "Attenuators")
-        self.units_note = widgets.HTML("<div style='color:#555;margin:6px 0'>Units: Screen power density W/mm^2; Angular power density W/mrad^2; Angles via small-angle: θ≈x/z, ψ≈y/z.</div>")
+        self.units_note = widgets.HTML("<div style='color:#555;margin:6px 0'>Units: Screen power density W/mm^2; Angular power density W/mrad^2; Angles are computed from geometry.</div>")
         self.root = widgets.VBox([
             widgets.HTML("<h3>Bending Magnet Power at Screen</h3>"),
             self.accordion,
@@ -231,11 +231,14 @@ class BeamlineUI:
             figPD, axPD = plt.subplots(1, 2, figsize=(12, 5))
             # Build extents for angular and screen power density maps
             extent_mm = [res.x_mm[0], res.x_mm[-1], res.y_mm[0], res.y_mm[-1]]
-            theta_x_mrad = (res.x_mm / s.screen_z_mm) * 1e3
-            theta_y_mrad = (res.y_mm / s.screen_z_mm) * 1e3
+            zscr = s.screen_z_mm
+            theta_x_mrad = np.arctan(res.x_mm / zscr) * 1e3
+            theta_y_mrad = np.arctan(res.y_mm / zscr) * 1e3
             extent_ang = [theta_x_mrad[0], theta_x_mrad[-1], theta_y_mrad[0], theta_y_mrad[-1]]
-            # Angular power density [W/mrad^2] reconstructed via I = PD * z^2 and rad^2 -> mrad^2 (÷1e6)
-            ang_pd = res.power_W_m2 * (s.screen_z_mm ** 2) / 1e6
+            # Angular power density [W/mrad^2] using exact Jacobian: dA/dθdψ = z^2*(1+(x/z)^2)*(1+(y/z)^2)
+            fx = (1.0 + (res.x_mm / zscr) ** 2)[None, :]
+            fy = (1.0 + (res.y_mm / zscr) ** 2)[:, None]
+            ang_pd = res.power_W_m2 * (zscr ** 2) * (fy * fx) / 1e6
             # Left: angular power density [W/mrad^2]
             im_ang = axPD[0].imshow(ang_pd, extent=extent_ang, origin="lower", aspect="equal")
             axPD[0].set_title("Angular power density [W/mrad^2]")
@@ -359,8 +362,8 @@ class BeamlineUI:
                     return
                 z = np.linspace(z0, z1, 50)
                 for (th_min, th_max) in intervals:
-                    y1 = th_min * z
-                    y2 = th_max * z
+                    y1 = np.tan(th_min) * z
+                    y2 = np.tan(th_max) * z
                     ax.fill_between(z, y1, y2, color=color, alpha=0.25, label=label, linewidth=0.0, edgecolor="none", zorder=2)
                     label = None  # only show once
 

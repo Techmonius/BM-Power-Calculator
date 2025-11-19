@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import List, Tuple
+import math
 
 
 @dataclass
@@ -76,7 +77,7 @@ def _interval_intersection(a: List[Tuple[float, float]], b: List[Tuple[float, fl
 def mask_angular_windows(mask: Mask) -> Tuple[List[Tuple[float, float]], List[Tuple[float, float]]]:
     """
     Compute the horizontal and vertical angular acceptance windows for a single mask,
-    using small-angle approximation: theta_x = x_mm / z_mm, theta_y = y_mm / z_mm (radians).
+    using exact angle mapping: theta_x = arctan(x_mm / z_mm), theta_y = arctan(y_mm / z_mm) (radians).
 
     Returns:
       (theta_x_windows_rad, theta_y_windows_rad) where each is a list of [min, max] intervals in radians.
@@ -96,11 +97,11 @@ def mask_angular_windows(mask: Mask) -> Tuple[List[Tuple[float, float]], List[Tu
         x_max = ap.center_x_mm + half_w
         y_min = ap.center_y_mm - half_h
         y_max = ap.center_y_mm + half_h
-        # Convert mm at plane to radians relative to source (small-angle approx).
-        theta_x_min = x_min / z
-        theta_x_max = x_max / z
-        theta_y_min = y_min / z
-        theta_y_max = y_max / z
+        # Convert mm at plane to angles relative to source using exact arctangent mapping.
+        theta_x_min = math.atan(x_min / z)
+        theta_x_max = math.atan(x_max / z)
+        theta_y_min = math.atan(y_min / z)
+        theta_y_max = math.atan(y_max / z)
         # Ensure proper ordering
         theta_x_intervals.append((min(theta_x_min, theta_x_max), max(theta_x_min, theta_x_max)))
         theta_y_intervals.append((min(theta_y_min, theta_y_max), max(theta_y_min, theta_y_max)))

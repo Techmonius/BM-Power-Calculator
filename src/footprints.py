@@ -103,9 +103,13 @@ def extract_footprints(
         width_x_mm = float(res.x_mm[x_max] - res.x_mm[x_min])
         height_y_mm = float(res.y_mm[y_max] - res.y_mm[y_min])
 
-        # Convert to mrad via small-angle: theta = x / z, psi = y / z
-        width_theta_mrad = (width_x_mm / screen_z_mm) * 1e3
-        height_psi_mrad = (height_y_mm / screen_z_mm) * 1e3
+        # Convert to mrad via exact mapping at bounding edges
+        x0 = float(res.x_mm[x_min])
+        x1 = float(res.x_mm[x_max])
+        y0 = float(res.y_mm[y_min])
+        y1 = float(res.y_mm[y_max])
+        width_theta_mrad = (np.arctan(x1 / screen_z_mm) - np.arctan(x0 / screen_z_mm)) * 1e3
+        height_psi_mrad = (np.arctan(y1 / screen_z_mm) - np.arctan(y0 / screen_z_mm)) * 1e3
 
         # Total power in this footprint: integrate density over its pixels (W/mm^2 * mm^2)
         local_power_density = data[labels == lbl]

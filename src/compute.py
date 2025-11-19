@@ -131,10 +131,10 @@ def _auto_fov_mm(theta_x_windows: List[Tuple[float, float]], theta_y_windows: Li
     ty_min = min(w[0] for w in ty)
     ty_max = max(w[1] for w in ty)
 
-    x_min_mm = tx_min * z
-    x_max_mm = tx_max * z
-    y_min_mm = ty_min * z
-    y_max_mm = ty_max * z
+    x_min_mm = math.tan(tx_min) * z
+    x_max_mm = math.tan(tx_max) * z
+    y_min_mm = math.tan(ty_min) * z
+    y_max_mm = math.tan(ty_max) * z
 
     # Add a slight margin (5%) to avoid clipping due to discretization
     mx = 0.05 * max(1.0, abs(x_max_mm - x_min_mm))
@@ -152,9 +152,9 @@ def _auto_fov_mm(theta_x_windows: List[Tuple[float, float]], theta_y_windows: Li
 
 
 def _theta_grids_from_screen(x_mm: np.ndarray, y_mm: np.ndarray, z_mm: float) -> Tuple[np.ndarray, np.ndarray]:
-    # Small-angle approximation: theta = coord / z
-    theta_x = x_mm / z_mm
-    theta_y = y_mm / z_mm
+    # Exact angle mapping: theta = arctan(coord / z)
+    theta_x = np.arctan(x_mm / z_mm)
+    theta_y = np.arctan(y_mm / z_mm)
     return theta_x, theta_y
 
 
@@ -384,7 +384,7 @@ def compute_screen_power(magnet_set: MagnetSet,
         line_power_x = np.zeros(settings.nx, dtype=float)
         line_power_y = np.zeros(settings.ny, dtype=float)
         z = settings.screen_z_mm
-        theta_x_mrad = (x / z) * 1e3 if z != 0.0 else np.zeros_like(x)
+        theta_x_mrad = np.arctan(x / z) * 1e3 if z != 0.0 else np.zeros_like(x)
         line_power_theta = np.zeros(settings.nx, dtype=float)
         # Transmission defined even in blocked case
         T_E = np.array(transmission_curve(atts_up, E_eV)) if atts_up else np.ones_like(E_eV)
@@ -495,7 +495,8 @@ def compute_screen_power(magnet_set: MagnetSet,
 
     # Line power density per horizontal mrad
     theta_x_mrad = theta_x_rad * 1e3
-    line_power_theta_W_per_mrad = line_power_x_W_per_mm * (settings.screen_z_mm / 1e3)
+    jac_dx_dtheta = settings.screen_z_mm * (1.0 + (x_mm / settings.screen_z_mm) ** 2)
+    line_power_theta_W_per_mrad = line_power_x_W_per_mm * (jac_dx_dtheta / 1e3)
 
     # Angular-grid diagnostic total equals sum from theta integration (no xrt now)
     angular_total = total_power_from_theta
@@ -605,7 +606,8 @@ def compute_screen_power(magnet_set: MagnetSet,
 
     # Line power density per horizontal mrad: Lθ(θ) = Lx(x) * z ; convert to per mrad by dividing by 1e3
     theta_x_mrad = theta_x_rad * 1e3
-    line_power_theta_W_per_mrad = line_power_x_W_per_mm * (z_mm / 1e3)
+    jac_dx_dtheta = z_mm * (1.0 + (x_mm / z_mm) ** 2)
+    line_power_theta_W_per_mrad = line_power_x_W_per_mm * (jac_dx_dtheta / 1e3)
 
     # Total power from area integral (W/mm^2 * mm^2)
     total_power = float(np.sum(power_density) * (dx_mm * dy_mm))
@@ -659,3 +661,6 @@ def compute_screen_power(magnet_set: MagnetSet,
         delta_screen_vs_angular_percent=delta_screen_vs_angular,
         delta_angular_vs_validation_percent=delta_angular_vs_validation,
     )
+
+
+Here’s the .gitattributes file to add for consistent line endings as suggested. You can use the Apply button on the code block to create/update this file, or switch to Agent Mode to make the update automatically.
