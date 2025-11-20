@@ -1,14 +1,12 @@
 ﻿from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import List, Optional, Dict
-
+from typing import List
 import numpy as np
 import ipywidgets as widgets
 from IPython.display import display, clear_output
 import matplotlib.pyplot as plt
-from matplotlib.patches import Rectangle
-import json, os
+import json
+import os
 try:
     import xraylib
 except Exception:
@@ -21,12 +19,11 @@ from .compute import Settings, compute_screen_power
 from .footprints import extract_footprints, overlay_footprints_on_ax
 from .ui_presets import (
     default_settings,
-    default_masks,
-    default_attenuators,
+    
+    
     default_magnet_set_title,
     materials_dropdown_options,
 )
-
 
 # ---- Helper widget classes ----
 
@@ -54,7 +51,6 @@ class ApertureWidget:
 
     def to_model(self) -> Aperture:
         return Aperture(width_mm=self.w_mm.value, height_mm=self.h_mm.value, center_x_mm=self.cx.value, center_y_mm=self.cy.value)
-
 
 class MaskWidget:
     def __init__(self, idx: int, m: Optional[Mask] = None, on_remove=None):
@@ -89,7 +85,6 @@ class MaskWidget:
     def to_model(self) -> Mask:
         return Mask(name=self.name.value, z_mm=self.z.value, apertures=[apw.to_model() for apw in self.apertures])
 
-
 class AttenuatorWidget:
     def __init__(self, idx: int, a: Optional[Attenuator] = None, materials: Optional[List[str]] = None, on_remove=None):
         self.idx = idx
@@ -106,7 +101,6 @@ class AttenuatorWidget:
 
     def to_model(self) -> Attenuator:
         return Attenuator(z_mm=self.z.value, material=self.material.value, thickness_mm=self.thickness.value)
-
 
 # ---- Main UI ----
 
@@ -131,7 +125,6 @@ class BeamlineUI:
         settings_row1 = widgets.HBox([self.dd_set, self.energy, self.current, self.screen_z])
         settings_row2 = widgets.HBox([self.nx, self.ny, self.Emin, self.Emax, self.nE, self.logE, self.vert_sigma])
 
-
         # Masks
         self.masks_widgets: List[MaskWidget] = []
         self.btn_add_mask = widgets.Button(description="+ Mask", button_style='info')
@@ -140,7 +133,6 @@ class BeamlineUI:
         masks_box = widgets.VBox([widgets.HTML("<b>Masks</b>"), self.btn_add_mask, self.masks_container])
 
         # Attenuators
-        materials = materials_dropdown_options()
         self.att_widgets: List[AttenuatorWidget] = []
         self.btn_add_att = widgets.Button(description="+ Attenuator", button_style='info')
         self.btn_add_att.on_click(self._on_add_att)
@@ -176,7 +168,6 @@ class BeamlineUI:
         self.masks_container.children = [mw.w for mw in self.masks_widgets]
 
     def _on_add_att(self, _):
-        materials = materials_dropdown_options()
         aw = AttenuatorWidget(len(self.att_widgets) + 1, materials=materials, on_remove=self._on_remove_att)
         self.att_widgets.append(aw)
         self.atts_container.children = [aw.w for aw in self.att_widgets]
@@ -409,9 +400,11 @@ class BeamlineUI:
 
             # Decorations and labels
             ax_td.axvline(s.screen_z_mm, color='red', linestyle='-', alpha=0.7, label='Screen')
-            ax_sp.axvline(s.screen_z_mm, color='red', linestyle='-', alpha=0.7)
-            ax_td.set_xlabel('Z [mm]'); ax_td.set_ylabel('X [mm]'); ax_td.set_title('Top-down envelope (X vs Z)')
-            ax_sp.set_xlabel('Z [mm]'); ax_sp.set_ylabel('Y [mm]'); ax_sp.set_title('Side-profile envelope (Y vs Z)')
+            ax_sp.axvline(s.screen_z_mm, color='red', linestyle='-', alpha=0.7)ax_td.set_xlabel('Z [mm]')
+            ax_td.set_ylabel('X [mm]')
+            ax_td.set_title('Top-down envelope (X vs Z)')ax_sp.set_xlabel('Z [mm]')
+            ax_sp.set_ylabel('Y [mm]')
+            ax_sp.set_title('Side-profile envelope (Y vs Z)')
             ax_td.grid(True, ls=':'); ax_sp.grid(True, ls=':')
 
             # Draw mask planes as thin black lines with gaps at apertures
@@ -490,7 +483,7 @@ class BeamlineUI:
             # Persist current scenario
             try:
                 self._save_state()
-            except Exception as _:
+            except Exception:
                 pass
 
             # Summary outputs table
@@ -611,9 +604,6 @@ class BeamlineUI:
             )
             display(widgets.HTML(mag_html))
 
-
-
-
     def _state_path(self) -> str:
         return os.path.join(os.getcwd(), "bm_power_state.json")
 
@@ -690,7 +680,6 @@ class BeamlineUI:
             # Attenuators
             atts_state = state.get("attenuators", [])
             if atts_state:
-                materials = materials_dropdown_options()
                 new_aws: List[AttenuatorWidget] = []
                 for i, a in enumerate(atts_state, start=1):
                     aw = AttenuatorWidget(i, Attenuator(z_mm=a.get("z_mm", 0.0), material=a.get("material", materials[0]), thickness_mm=a.get("thickness_mm", 0.1)), materials, on_remove=self._on_remove_att)
@@ -721,11 +710,8 @@ class BeamlineUI:
     def display(self):
         display(self.root)
 
-
 def launch():
     ui = BeamlineUI()
     ui.display()
     return ui
-
-
 

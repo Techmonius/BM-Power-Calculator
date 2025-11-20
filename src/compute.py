@@ -8,7 +8,7 @@ import numpy as np
 
 from .magnets import Magnet, MagnetSet, get_available_magnet_sets, mrad_to_rad
 from .masks import Mask, combined_angular_windows_upstream
-from .attenuation import Attenuator, filter_upstream, transmission_curve
+from .attenuation import Attenuator
 
 # xrt imports
 @dataclass
@@ -31,7 +31,6 @@ class Settings:
     do_validation: bool = True
 
     s0_is_per_0p1bw: bool = True
-
 
 @dataclass
 class ScreenResult:
@@ -63,22 +62,18 @@ class ScreenResult:
     delta_screen_vs_angular_percent: Optional[float] = None
     delta_angular_vs_validation_percent: Optional[float] = None
 
-
 def _energy_grid(settings: Settings) -> np.ndarray:
     if settings.logE:
         return np.logspace(np.log10(settings.Emin_eV), np.log10(settings.Emax_eV), settings.nE)
     return np.linspace(settings.Emin_eV, settings.Emax_eV, settings.nE)
 
-
 def _gamma(energy_GeV: float) -> float:
     # gamma = 1957 * E (E in GeV)
     return 1957.0 * energy_GeV
 
-
 def _sigma_vert_rad(energy_GeV: float) -> float:
     # sigma = 0.608/gamma = 0.311/E (E in GeV), in radians
     return 0.608 / _gamma(energy_GeV)
-
 
 def _horizontal_theta_union_from_magnets(magnets: List[Magnet]) -> List[Tuple[float, float]]:
     # Union of horizontal theta ranges across magnets (in radians)
@@ -99,7 +94,6 @@ def _horizontal_theta_union_from_magnets(magnets: List[Magnet]) -> List[Tuple[fl
         else:
             merged.append((s, e))
     return merged
-
 
 def _auto_fov_mm(theta_x_windows: List[Tuple[float, float]], theta_y_windows: List[Tuple[float, float]],
                  settings: Settings) -> Tuple[np.ndarray, np.ndarray]:
@@ -143,13 +137,11 @@ def _auto_fov_mm(theta_x_windows: List[Tuple[float, float]], theta_y_windows: Li
     y = np.linspace(y_min_mm - my, y_max_mm + my, settings.ny)
     return x, y
 
-
 def _theta_grids_from_screen(x_mm: np.ndarray, y_mm: np.ndarray, z_mm: float) -> Tuple[np.ndarray, np.ndarray]:
     # Exact angle mapping: theta = arctan(coord / z)
     theta_x = np.arctan(x_mm / z_mm)
     theta_y = np.arctan(y_mm / z_mm)
     return theta_x, theta_y
-
 
 def _apply_angular_windows_mask(theta_x: np.ndarray, theta_y: np.ndarray,
                                 theta_x_windows: List[Tuple[float, float]],
@@ -163,7 +155,6 @@ def _apply_angular_windows_mask(theta_x: np.ndarray, theta_y: np.ndarray,
         mask_y |= (theta_y >= s) & (theta_y <= e)
     # 2D combine via outer product
     return np.outer(mask_y, mask_x)
-
 
 def _bm_horizontal_spectral_angle_density(magnet: Magnet, energies_eV: np.ndarray, theta_x_rad: np.ndarray,
                                            settings: Settings) -> np.ndarray:
@@ -185,7 +176,6 @@ def _bm_horizontal_spectral_angle_density(magnet: Magnet, energies_eV: np.ndarra
 
     # Create a BM source object. xrt's BM can be used to evaluate intensity via its methods.
     # Construct BM and set attributes to match your xrt version (no 'I' kwarg)
-    bm = XrtBendingMagnet()
     try:
         bm.eE = settings.energy_GeV
     except Exception:
@@ -236,12 +226,10 @@ def _bm_horizontal_spectral_angle_density(magnet: Magnet, energies_eV: np.ndarra
 
     return spectral
 
-
 def _vertical_profile(theta_y_rad: np.ndarray, settings: Settings) -> np.ndarray:
     # Gaussian with sigma = 0.608/gamma
     sigma = _sigma_vert_rad(settings.energy_GeV)
     return np.exp(-0.5 * (theta_y_rad / sigma) ** 2) / (math.sqrt(2 * math.pi) * sigma)
-
 
 def _validate_total_power(*args, **kwargs) -> Optional[float]:
     # Validation disabled (xrt removed)
