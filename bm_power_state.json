@@ -14,16 +14,34 @@
   "masks": [
     {
       "name": "Mask1",
+      "z_mm": 1000.0,
+      "apertures": [
+        {
+          "width_mm": 10.0,
+          "height_mm": 5.0,
+          "center_x_mm": -5.0,
+          "center_y_mm": 0.0
+        }
+      ]
+    },
+    {
+      "name": "Mask2",
       "z_mm": 7000.0,
       "apertures": [
         {
           "width_mm": 1.0,
           "height_mm": 5.0,
-          "center_x_mm": 0.0,
+          "center_x_mm": -1.0,
           "center_y_mm": 0.0
         }
       ]
     }
   ],
-  "attenuators": []
+  "attenuators": [
+    {
+      "z_mm": 500.0,
+      "material": "Be",
+      "thickness_mm": 0.1
+    }
+  ]
 }

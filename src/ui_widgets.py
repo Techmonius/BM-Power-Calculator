@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import List, Optional, Dict
@@ -65,10 +65,10 @@ class MaskWidget:
         self.apertures: List[ApertureWidget] = []
         for i, ap in enumerate(m.apertures):
             self.apertures.append(ApertureWidget(i + 1, ap, on_remove=self._on_remove_aperture))
-        self.btn_add_ap = widgets.Button(description="+ Aperture", button_style="info")
+        self.btn_add_ap = widgets.Button(description="+ Aperture", button_style='info')
         self.btn_add_ap.on_click(self._on_add_aperture)
         self._on_remove = on_remove
-        self.btn_remove_mask = widgets.Button(description="− Mask", button_style="danger")
+        self.btn_remove_mask = widgets.Button(description="− Mask", button_style='danger')
         self.btn_remove_mask.on_click(lambda _: self._on_remove and self._on_remove(self))
         self.ap_container = widgets.VBox([ap.w for ap in self.apertures])
         header = widgets.HBox([widgets.Label(value=f"Mask {idx}"), self.name, self.z, self.btn_add_ap, self.btn_remove_mask])
@@ -100,7 +100,7 @@ class AttenuatorWidget:
         self.material = widgets.Dropdown(options=materials, value=a.material, description="Material", layout=widgets.Layout(width="220px"))
         self.thickness = widgets.FloatText(value=a.thickness_mm, description="Thk [mm]", layout=widgets.Layout(width="180px"))
         self._on_remove = on_remove
-        self.btn_remove_att = widgets.Button(description="− Attenuator", button_style="danger")
+        self.btn_remove_att = widgets.Button(description="− Attenuator", button_style='danger')
         self.btn_remove_att.on_click(lambda _: self._on_remove and self._on_remove(self))
         self.w = widgets.HBox([self.title, self.z, self.material, self.thickness, self.btn_remove_att])
 
@@ -126,7 +126,7 @@ class BeamlineUI:
         self.Emax = widgets.FloatText(value=self.settings.Emax_eV, description="Emax [eV]")
         self.nE = widgets.IntText(value=self.settings.nE, description="nE")
         self.logE = widgets.Checkbox(value=self.settings.logE, description="Log spacing")
-        self.vert_sigma = widgets.FloatText(value=getattr(self.settings, 'vert_sigma_multiplier', 5.0), description="Vert Nσ", layout=widgets.Layout(width="160px"))
+        self.vert_sigma = widgets.FloatText(value=getattr(self.settings, 'vert_sigma_multiplier', 5.0), description="Vert Nsigma", layout=widgets.Layout(width="160px"))
 
         settings_row1 = widgets.HBox([self.dd_set, self.energy, self.current, self.screen_z])
         settings_row2 = widgets.HBox([self.nx, self.ny, self.Emin, self.Emax, self.nE, self.logE, self.vert_sigma])
@@ -134,7 +134,7 @@ class BeamlineUI:
 
         # Masks
         self.masks_widgets: List[MaskWidget] = []
-        self.btn_add_mask = widgets.Button(description="+ Mask", button_style="info")
+        self.btn_add_mask = widgets.Button(description="+ Mask", button_style='info')
         self.btn_add_mask.on_click(self._on_add_mask)
         self.masks_container = widgets.VBox([mw.w for mw in self.masks_widgets])
         masks_box = widgets.VBox([widgets.HTML("<b>Masks</b>"), self.btn_add_mask, self.masks_container])
@@ -142,13 +142,13 @@ class BeamlineUI:
         # Attenuators
         materials = materials_dropdown_options()
         self.att_widgets: List[AttenuatorWidget] = []
-        self.btn_add_att = widgets.Button(description="+ Attenuator", button_style="info")
+        self.btn_add_att = widgets.Button(description="+ Attenuator", button_style='info')
         self.btn_add_att.on_click(self._on_add_att)
         self.atts_container = widgets.VBox([aw.w for aw in self.att_widgets])
         atts_box = widgets.VBox([widgets.HTML("<b>Attenuators</b>"), self.btn_add_att, self.atts_container])
 
         # Run / output
-        self.btn_run = widgets.Button(description="Compute", button_style="success")
+        self.btn_run = widgets.Button(description="Compute", button_style='success')
         self.btn_run.on_click(self._on_run)
         self.output = widgets.Output()
 
@@ -158,8 +158,10 @@ class BeamlineUI:
         self.accordion.set_title(1, "Masks")
         self.accordion.set_title(2, "Attenuators")
         self.units_note = widgets.HTML("<div style='color:#555;margin:6px 0'>Units: Screen power density W/mm^2; Angular power density W/mrad^2; Angles are computed from geometry.</div>")
+        self.css = widgets.HTML("<style>.bm-table{border-collapse:collapse;font-size:12px;border:1px solid #ddd;}.bm-table th,.bm-table td{padding:6px 10px;border:1px solid #ddd;}.bm-table th{background:#f7f7f7;text-align:left;}.bm-table tr:nth-child(even){background:#fafafa;}.bm-num{text-align:right;}</style>")
         self.root = widgets.VBox([
             widgets.HTML("<h3>Bending Magnet Power at Screen</h3>"),
+            self.css,
             self.accordion,
             self.units_note,
             self.btn_run,
@@ -216,9 +218,17 @@ class BeamlineUI:
     def _on_run(self, _):
         with self.output:
             clear_output()
+            css_html = """<style>
+.bm-table{border-collapse:collapse;font-size:12px;border:1px solid #ddd;}
+.bm-table th,.bm-table td{padding:6px 10px;border:1px solid #ddd;}
+.bm-table th{background:#f7f7f7;text-align:left;}
+.bm-table tr:nth-child(even){background:#fafafa;}
+.bm-num{text-align:right;}
+</style>"""
+            display(widgets.HTML(css_html))
             # Warning banner if xraylib missing
             if xraylib is None:
-                display(widgets.HTML('<div style="padding:8px;border:1px solid #cc7;background:#fff3cd;color:#856404;"><b>Warning:</b> Attenuation is disabled because xraylib is not installed. Results exclude attenuation.</div>'))
+                display(widgets.HTML("<div style='padding:8px;border:1px solid #cc7;background:#fff3cd;color:#856404;'><b>Warning:</b> Attenuation is disabled because xraylib is not installed. Results exclude attenuation.</div>"))
             print("Computing... (up to ~60s)")
             s, masks, atts, mset = self._collect_models()
             try:
@@ -229,22 +239,15 @@ class BeamlineUI:
 
             # Plot power density
             figPD, axPD = plt.subplots(1, 2, figsize=(12, 5))
-            # Build extents for angular and screen power density maps
+            # Build Y-profile and screen power density maps
             extent_mm = [res.x_mm[0], res.x_mm[-1], res.y_mm[0], res.y_mm[-1]]
-            zscr = s.screen_z_mm
-            theta_x_mrad = np.arctan(res.x_mm / zscr) * 1e3
-            theta_y_mrad = np.arctan(res.y_mm / zscr) * 1e3
-            extent_ang = [theta_x_mrad[0], theta_x_mrad[-1], theta_y_mrad[0], theta_y_mrad[-1]]
-            # Angular power density [W/mrad^2] using exact Jacobian: dA/dθdψ = z^2*(1+(x/z)^2)*(1+(y/z)^2)
-            fx = (1.0 + (res.x_mm / zscr) ** 2)[None, :]
-            fy = (1.0 + (res.y_mm / zscr) ** 2)[:, None]
-            ang_pd = res.power_W_m2 * (zscr ** 2) * (fy * fx) / 1e6
-            # Left: angular power density [W/mrad^2]
-            im_ang = axPD[0].imshow(ang_pd, extent=extent_ang, origin="lower", aspect="equal")
-            axPD[0].set_title("Angular power density [W/mrad^2]")
-            axPD[0].set_xlabel("θ [mrad]")
-            axPD[0].set_ylabel("ψ [mrad]")
-            plt.colorbar(im_ang, ax=axPD[0])
+                        # Build Y-profile (mean power density across x) and screen power density map
+            pd_y_mean = np.mean(res.power_W_m2, axis=1)
+            axPD[0].plot(pd_y_mean, res.y_mm)
+            axPD[0].set_title("Power density vs y at screen")
+            axPD[0].set_xlabel("Power density [W/mm^2]")
+            axPD[0].set_ylabel("y [mm]")
+            axPD[0].grid(True, ls=":")
             # Right: screen power density [W/mm^2]
             im_mm = axPD[1].imshow(res.power_W_m2, extent=extent_mm, origin="lower", aspect="equal")
             axPD[1].set_title("Power density at screen [W/mm^2]")
@@ -287,23 +290,23 @@ class BeamlineUI:
                     except Exception:
                         return str(v)
                 rows_html = []
-                rows_html.append("<tr><th>Footprint</th><th>Size X [mm]</th><th>Size Y [mm]</th><th>Width θ [mrad]</th><th>Height ψ [mrad]</th><th>Total Power [W]</th></tr>")
+                rows_html.append("<tr><th style='padding:6px 10px;border:1px solid #ddd;background:#f7f7f7;text-align:left'>Footprint</th><th style='padding:6px 10px;border:1px solid #ddd;background:#f7f7f7;text-align:left'>Size X [mm]</th><th style='padding:6px 10px;border:1px solid #ddd;background:#f7f7f7;text-align:left'>Size Y [mm]</th><th style='padding:6px 10px;border:1px solid #ddd;background:#f7f7f7;text-align:left'>Width theta [mrad]</th><th style='padding:6px 10px;border:1px solid #ddd;background:#f7f7f7;text-align:left'>Height psi [mrad]</th><th style='padding:6px 10px;border:1px solid #ddd;background:#f7f7f7;text-align:left'>Total Power [W]</th></tr>")
                 total_fp_power = 0.0
                 for fp in fps:
                     total_fp_power += float(fp.total_power_W)
                     rows_html.append(
                         f"<tr>"
-                        f"<td>{fp.label}</td>"
-                        f"<td>{_fmt(fp.width_x_mm)}</td>"
-                        f"<td>{_fmt(fp.height_y_mm)}</td>"
-                        f"<td>{_fmt(fp.width_theta_mrad)}</td>"
-                        f"<td>{_fmt(fp.height_psi_mrad)}</td>"
-                        f"<td>{fp.total_power_W:.3e}</td>"
+                        f"<td style='padding:6px 10px;border:1px solid #ddd;text-align:left'>{fp.label}</td>"
+                        f"<td style='padding:6px 10px;border:1px solid #ddd;text-align:right'>{_fmt(fp.width_x_mm)}</td>"
+                        f"<td style='padding:6px 10px;border:1px solid #ddd;text-align:right'>{_fmt(fp.height_y_mm)}</td>"
+                        f"<td style='padding:6px 10px;border:1px solid #ddd;text-align:right'>{_fmt(fp.width_theta_mrad)}</td>"
+                        f"<td style='padding:6px 10px;border:1px solid #ddd;text-align:right'>{_fmt(fp.height_psi_mrad)}</td>"
+                        f"<td style='padding:6px 10px;border:1px solid #ddd;text-align:right'>{_fmt(fp.total_power_W)}</td>"
                         f"</tr>"
                     )
                 # Add a bottom sum row
                 rows_html.append(
-                    f"<tr style=\"border-top:1px solid #ccc\"><th colspan=5 style=\"text-align:right\">Sum of footprint powers [W]</th><th>{total_fp_power:.3e}</th></tr>"
+                    f"<tr style=\"border-top:1px solid #ccc\"><th colspan=5 style=\"text-align:right\">Sum of footprint powers [W]</th><th style='padding:6px 10px;border:1px solid #ddd;background:#f7f7f7;text-align:left'>{_fmt(total_fp_power)}</th></tr>"
                 )
                 table_html = (
                     "<div style=\"margin-top:8px\">"
@@ -525,22 +528,88 @@ class BeamlineUI:
             ppk_parts = []
             for _mag in mset.magnets:
                 _ppk = 5.42 * _mag.B_T * (s.energy_GeV ** 4) * s.current_A
-                ppk_parts.append(f"{_mag.name}: {_ppk:.3e}")
+                ppk_parts.append(f"{_mag.name}: {_fmtf(_ppk, 3)}")
             ppeak_html = "; ".join(ppk_parts)
             rows = []
-            rows.append(f"<tr><th style='text-align:left;'>Magnet set</th><td>{magnet_title}</td></tr>")
-            rows.append(f"<tr><th style='text-align:left;'>Screen Z [mm]</th><td>{_fmtf(s.screen_z_mm, 3)}</td></tr>")
-            rows.append(f"<tr><th style='text-align:left;'>Sigma</th><td>{_fmt_sig(sigma_rad, 6)} rad ({_fmt_sig(sigma_mrad, 6)} mrad)</td></tr>")
-            rows.append(f"<tr><th style='text-align:left;'>P_peak (5.42·B·E^4·I) [W]</th><td>{ppeak_html}</td></tr>")
-            rows.append(f"<tr><th style='text-align:left;'>Total power at screen [W]</th><td>{_fmtf(res.total_power_W, 3)}</td></tr>")
+            rows.append(f"<tr><th>Magnet set</th><td>{magnet_title}</td></tr>")
+            rows.append(f"<tr><th>Screen Z [mm]</th><td>{_fmtf(s.screen_z_mm, 3)}</td></tr>")
+            rows.append(f"<tr><th>Sigma [mrad]</th><td>{_fmt_sig(sigma_mrad, 6)}</td></tr>")
+            rows.append(f"<tr><th>P_peak (5.42·B·E^4·I) [W]</th><td>{ppeak_html}</td></tr>")
+            rows.append(f"<tr><th>Total power at screen [W]</th><td>{_fmtf(res.total_power_W, 3)}</td></tr>")
 
             summary_html = (
                 "<div style=\"margin-top:10px\">"
                 "<h4 style=\"margin:4px 0\">Run Summary</h4>"
-                "<table style=\"border-collapse:collapse;font-size:12px\">" + "".join(rows) + "</table>"
+                "<table>" + "".join(rows) + "</table>"
                 "</div>"
             )
             display(widgets.HTML(summary_html))
+            # Per-magnet subtable
+            gamma = 1957.0 * s.energy_GeV
+            sigma_rad = 0.608 / gamma
+            sigma_mrad = sigma_rad * 1e3
+            downstream_mag = max(mset.magnets, key=lambda m: m.z_mm) if mset.magnets else None
+
+            def _intersect_windows_half_open(windows, th_lo, th_hi, include_upper):
+                out = []
+                lo = min(th_lo, th_hi)
+                hi = max(th_lo, th_hi)
+                for a, b in (windows or []):
+                    s = max(a, lo)
+                    e = min(b, hi)
+                    if include_upper:
+                        if s <= e:
+                            out.append((s, e))
+                    else:
+                        if s < e:
+                            out.append((s, e))
+                return out
+
+            rows_mag = []
+            rows_mag.append(
+                "<tr><th>Magnet</th><th>B [T]</th><th>theta min [mrad]</th><th>theta max [mrad]</th><th>z [mm]</th><th>Sigma [mrad]</th><th>P_peak [W]</th><th>Power [W]</th><th>Ltheta [W/mrad]</th><th>Lx [W/mm]</th><th>E_c [keV]</th></tr>"
+            )
+            gamma = 1957.0 * s.energy_GeV
+            sigma_mrad = (0.608 / gamma) * 1e3
+            downstream_mag = max(mset.magnets, key=lambda m: m.z_mm) if mset.magnets else None
+            def _intersect_windows_half_open(windows, th_lo, th_hi, include_upper):
+                out = []
+                lo = min(th_lo, th_hi)
+                hi = max(th_lo, th_hi)
+                for a, b in (windows or []):
+                    s = max(a, lo)
+                    e = min(b, hi)
+                    if include_upper:
+                        if s <= e:
+                            out.append((s, e))
+                    else:
+                        if s < e:
+                            out.append((s, e))
+                return out
+            for mag in mset.magnets:
+                include_upper = (mag is downstream_mag)
+                th_lo = min(mag.theta_min_mrad, mag.theta_max_mrad) * 1e-3
+                th_hi = max(mag.theta_min_mrad, mag.theta_max_mrad) * 1e-3
+                masked_theta = _intersect_windows_half_open(res.theta_x_windows_rad, th_lo, th_hi, include_upper)
+                width_mrad = 0.0
+                for s_th, e_th in masked_theta:
+                    width_mrad += (e_th - s_th) * 1e3
+                Ltheta_mrad = 4.22 * mag.B_T * (s.energy_GeV ** 3) * s.current_A
+                z_mag_mm = (s.screen_z_mm - mag.z_mm)
+                Lx_mm = (Ltheta_mrad * (1000.0 / z_mag_mm)) if z_mag_mm > 0 else 0.0
+                Pmag_W = Ltheta_mrad * width_mrad
+                Ppeak_W = 5.42 * mag.B_T * (s.energy_GeV ** 4) * s.current_A
+                Ec_keV = 0.665 * (s.energy_GeV ** 2) * mag.B_T
+                rows_mag.append(
+                    f"<tr><td>{mag.name}</td><td>{_fmtf(mag.B_T, 3)}</td><td>{_fmtf(mag.theta_min_mrad, 3)}</td><td>{_fmtf(mag.theta_max_mrad, 3)}</td><td>{_fmtf(mag.z_mm, 3)}</td><td>{_fmt_sig(sigma_mrad, 6)}</td><td>{_fmtf(Ppeak_W, 3)}</td><td>{_fmtf(Pmag_W, 3)}</td><td>{_fmtf(Ltheta_mrad, 3)}</td><td>{_fmtf(Lx_mm, 3)}</td><td>{_fmtf(Ec_keV, 3)}</td></tr>"
+                )
+            mag_html = (
+                "<div style=\"margin-top:10px\">"
+                "<h4 style=\"margin:4px 0\">Per-Magnet Summary</h4>"
+                "<table>" + "".join(rows_mag) + "</table>"
+                "</div>"
+            )
+            display(widgets.HTML(mag_html))
 
 
 
@@ -657,3 +726,6 @@ def launch():
     ui = BeamlineUI()
     ui.display()
     return ui
+
+
+
