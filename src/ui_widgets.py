@@ -400,9 +400,11 @@ class BeamlineUI:
 
             # Decorations and labels
             ax_td.axvline(s.screen_z_mm, color='red', linestyle='-', alpha=0.7, label='Screen')
-            ax_sp.axvline(s.screen_z_mm, color='red', linestyle='-', alpha=0.7)ax_td.set_xlabel('Z [mm]')
+            ax_sp.axvline(s.screen_z_mm, color='red', linestyle='-', alpha=0.7)
+            ax_td.set_xlabel('Z [mm]')
             ax_td.set_ylabel('X [mm]')
-            ax_td.set_title('Top-down envelope (X vs Z)')ax_sp.set_xlabel('Z [mm]')
+            ax_td.set_title('Top-down envelope (X vs Z)')
+            ax_sp.set_xlabel('Z [mm]')
             ax_sp.set_ylabel('Y [mm]')
             ax_sp.set_title('Side-profile envelope (Y vs Z)')
             ax_td.grid(True, ls=':'); ax_sp.grid(True, ls=':')
@@ -714,4 +716,6 @@ def launch():
     ui = BeamlineUI()
     ui.display()
     return ui
+
+
 

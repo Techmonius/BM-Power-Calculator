@@ -37,11 +37,5 @@
       ]
     }
   ],
-  "attenuators": [
-    {
-      "z_mm": 500.0,
-      "material": "Be",
-      "thickness_mm": 0.1
-    }
-  ]
+  "attenuators": []
 }
